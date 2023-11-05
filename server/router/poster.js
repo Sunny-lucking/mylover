@@ -1,16 +1,21 @@
 
 const express = require("express");
 const router = express.Router();
-import Banner from "./../model/banner"
+import Poster from "../model/poster"
 import formidable from 'formidable'
-import config from "./../src/config"
+import config from "../src/config"
 import {basename} from 'path'
-router.post('/addBanner',async (req,res)=>{
+router.post('/save',async (req,res)=>{
     // let {bannerName,url}  = req.body
     // parse a file upload
     let form = new formidable.IncomingForm();
     form.uploadDir = config.publicPath;
     form.keepExtensions = true
+    const { title, event_title, time, url, owner_id, _id} = req.query;
+    if (_id) {
+        
+    }
+    
     form.parse(req, async function(err, fields, files) {
         if (err) return err;
         let imgUrl = basename(files.image.path)
@@ -49,6 +54,53 @@ router.post('/addBanner',async (req,res)=>{
     //     })
     // }
 
+})
+router.get('/detail',async (req,res) =>{
+    try {
+        const {owner_id} = req.query
+        let poster = await Poster.findOne({owner_id});
+        if (poster){
+            return res.json({
+                poster:poster,
+                msg:'获取资料成功',
+                code:0
+            })
+        }else {
+            return res.json({
+                code:-1,
+                msg:'获取资料失败'
+            })
+        }
+    } catch (e) {
+        res.json({
+            msg:e.message|| e,
+            code: -1
+        })
+    }
+})
+router.post('/edit',async (req,res) =>{
+    try {
+        const {owner_id, title, event_title, time, url} = req.body
+        console.log(owner_id);
+        let poster = await Poster.findOne({owner_id});
+        console.log(poster);
+        if (poster){
+            await Poster.updateOne({owner_id},{title, event_title, time, url})
+        }else {
+           const res =  await Poster.create({owner_id, title, event_title, time, url})
+           console.log(res);
+        }
+        return res.json({
+            msg: '保存成功',
+            code: 0,
+        })
+    } catch (e) {
+        console.log(e);
+        res.json({
+            msg:e.message|| e,
+            code: -1
+        })
+    }
 })
 // router.post('/setRoleRight',async (req,res)=>{
 //     let {_id,children}  = req.body

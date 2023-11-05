@@ -19,13 +19,13 @@
       <div style="margin-top: 2vh; margin-bottom: 2vh">
         <van-cell center title="海报展示设置"> </van-cell>
         <van-cell-group inset>
-          <van-cell title="海报事件名称" :label="displayItem" is-link @click="requireName()" />
+          <van-cell title="海报事件名称" :label="form.event_title" is-link @click="onEdit('event_title')" />
 
-          <van-cell title="海报事件时间" :label="displayDay" is-link @click="requireTime()" />
+          <van-cell title="海报事件时间" :label="form.time" is-link @click="onEdit('time')" />
 
-          <van-cell title="海报名称" :label="displayLogo" is-link @click="requireLogo()" />
+          <van-cell title="海报名称" :label="form.title" is-link @click="onEdit('title')" />
 
-          <van-cell title="海报二维码内容" :label="displayUrl" is-link @click="requireUrl()" />
+          <van-cell title="海报二维码内容" :label="form.url" is-link @click="onEdit('url')" />
         </van-cell-group>
       </div>
     </div>
@@ -41,13 +41,13 @@
   <van-dialog v-model:show="show_2" title="🥰提示" :message="message" width="70vw" height="30vw"
     :close-on-click-overlay="true" :show-cancel-button="false" :show-confirm-button="false">
   </van-dialog>
-  <van-dialog v-model:show="show_3" :title="title" @confirm="userCheckConfirm" @cancel="userCheckCancel"
+  <van-dialog v-model:show="showDialog" :title="dialogTitle" @confirm="userCheckConfirm" @cancel="userCheckCancel"
     show-cancel-button>
     <div style="margin-top: 3vh; margin-bottom: 4vh">
       <van-cell-group inset>
         <van-cell-group inset>
-          <van-field v-model="userValue" rows="3" autosize :label="key" type="textarea" :maxlength="maxlength"
-            :placeholder="keyValue" show-word-limit />
+          <van-field v-model="userValue" rows="3" autosize :label="dialogLabel" type="textarea" :maxlength="maxlength"
+            :placeholder="dialogPlaceholder" show-word-limit />
         </van-cell-group>
       </van-cell-group>
     </div>
@@ -55,155 +55,113 @@
 </template>
   
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, getCurrentInstance } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import jwtDecode from "jwt-decode";
+import { useUserStore } from '@/store'
 export default {
   setup() {
+    const userStore = useUserStore();
+    const { proxy } = getCurrentInstance();
+    const form = ref({});
+    const dialogType = ref(null)
     const displayUrl = ref("");
     const displayLogo = ref("");
     const displayItem = ref("");
     const displayDay = ref("");
     const userData = ref("");
-    const title = ref("");
-    const key = ref("");
+    const dialogTitle = ref("");
+    const dialogLabel = ref("");
     const maxlength = ref("");
-    const keyValue = ref("");
+    const dialogPlaceholder = ref("");
     const userValue = ref("");
     const message = ref("");
     const userId = ref("");
     const show_1 = ref(false);
     const show_2 = ref(false);
-    const show_3 = ref(false);
+    const showDialog = ref(false);
     const router = useRouter();
-    const token = localStorage.getItem("jwtToken"); // 从localStorage获取JWT令牌
-    if (!token) {
-      router.replace("/login");
-    }
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
     onMounted(() => {
       show_1.value = true;
-      fetchLoginToken();
+      fetchDataAndFillForm();
     });
-    const fetchLoginToken = () => {
-      axios
-        .post("/api/loginToken?token=" + token)
-        .then((response) => {
-          if (response.data.code == 0) {
-            console.error(response.data.data);
-            router.replace("/login");
-            return;
-          }
-          console.log(response.data.data);
-          const decodedToken = jwtDecode(token);
-          // 从解码后的令牌中获取特定的数据
-          userId.value = decodedToken.id; // 从令牌中获取用户ID
-          fetchDataAndFillForm();
-        })
-        .catch((error) => {
-          console.error("请求loginToken接口失败", error);
-          router.replace("/login");
-        });
-    };
+    const onSetForm = (key, value) => {
+      form.value[key] = value
+    }
     const fetchDataAndFillForm = async () => {
       try {
-        axios
-          .get(`/api/selectUser?id=${userId.value}`, {
-            headers,
-          })
-          .then((response) => {
-            userData.value = response.data.data; // 假设服务器返回的数据是一个包含上述字段的对象
-            console.log(userData.value);
-            displayUrl.value = userData.value.displayUrl;
-            displayLogo.value = userData.value.displayLogo;
-            displayItem.value = userData.value.displayItem;
-            displayDay.value = userData.value.displayDay;
-          });
+        proxy.$http.get(`/api/poster/detail?owner_id=`+ userStore.userInfo._id).then((response) => {
+          if (response.data.code === 0) {
+            const poster = response.data.poster;
+            form.value.title = poster.title;
+            form.value.event_title = poster.event_title;
+            form.value.url = poster.url;
+            form.value.time = poster.time;
+          } else {
+            form.value.title = '';
+            form.value.event_title = '';
+            form.value.url = '';
+            form.value.time = '';
+          }
+        });
       } catch (error) {
         console.error("获取数据失败", error);
       }
       show_1.value = false;
     };
-    const requireName = () => {
-      title.value = "修改海报事件名称";
-      key.value = "海报事件名称";
-      maxlength.value = 7;
-      keyValue.value = "请输入事件名称";
-      show_3.value = true;
+    const formMap = {
+      event_title: {
+        title: "修改海报事件名称",
+        label: "海报事件名称",
+        maxlength: 7,
+        placeholder: "请输入事件名称",
+      },
+      time: {
+        title: "修改海报事件起始时间",
+        label: "海报事件起始时间",
+        maxlength: 20,
+        placeholder: "请输入海报事件起始时间（例如：2022-10-06）",
+      },
+      title: {
+        title: "修改海报Logo名称",
+        label: "海报Logo名称",
+        maxlength: 10,
+        placeholder: "请输入海报Logo名称",
+      },
+      url: {
+        title: "修改海报二维码链接",
+        label: "海报二维码链接",
+        maxlength: 50,
+        placeholder: "请输入海报二维码链接",
+      }
+    }
+    const onEdit = (type) => {
+      dialogTitle.value = formMap[type].title;
+      dialogLabel.value = formMap[type].label;
+      maxlength.value = formMap[type].maxlength;
+      dialogPlaceholder.value = formMap[type].placeholder;
+      showDialog.value = true;
+      dialogType.value = type;
       return;
     };
 
-    const requireTime = () => {
-      title.value = "修改海报事件起始时间";
-      key.value = "海报事件起始时间";
-      maxlength.value = 20;
-      keyValue.value = "请输入海报事件起始时间（例如：2022-10-06）";
-      show_3.value = true;
-      return;
-    };
+    const userCheckConfirm = async () => {
 
-    const requireLogo = () => {
-      title.value = "修改海报Logo名称";
-      key.value = "海报Logo名称";
-      maxlength.value = 10;
-      keyValue.value = "请输入海报Logo名称";
-      show_3.value = true;
-      return;
-    };
-
-    const requireUrl = () => {
-      title.value = "修改海报二维码链接";
-      key.value = "海报二维码链接";
-      maxlength.value = 50;
-      keyValue.value = "请输入海报二维码链接";
-      show_3.value = true;
-      return;
-    };
-
-    const userCheckConfirm = () => {
-      const user = {
-        nameId: userId.value,
-        displayItem: "",
-        displayDay: "",
-        displayLogo: "",
-        displayUrl: "",
-      };
-      console.log(user);
-      if (title.value == "修改海报二维码链接") {
-        user.displayUrl = userValue.value;
-        displayUrl.value = userValue.value;
-      } else if (title.value == "修改海报Logo名称") {
-        user.displayLogo = userValue.value;
-        displayLogo.value = userValue.value;
-      } else if (title.value == "修改海报事件起始时间") {
-        user.displayDay = userValue.value;
-        displayDay.value = userValue.value;
-      } else if (title.value == "修改海报事件名称") {
-        user.displayItem = userValue.value;
-        displayItem.value = userValue.value;
+      form.value[dialogType.value] = userValue.value
+      const params = {
+        owner_id: userStore.userInfo._id,
+        title: form.value.title,
+        event_title: form.value.event_title,
+        time: form.value.time,
+        url: form.value.url
       }
       // 发送 POST 请求到指定的 URL
-      fetch("/api/requireUser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(user),
-      })
-        .then((response) => {
-          console.log(response.json().data);
-          message.value = "保存成功";
-        })
-        .catch((error) => {
-          console.error("请求requireUser接口失败", error);
-          message.value = "保存失败";
-          // 处理请求失败的情况
-        });
+      const res = await proxy.$http.post('/api/poster/edit', params);
+      if (res.data.code === 0) {
+        message.value = "保存成功";
+      }
       show_2.value = true; // 显示
       // 等待两秒后执行关闭操作
       setTimeout(() => {
@@ -219,14 +177,13 @@ export default {
 
     const onClickLeft = () => router.replace("/Setting");
     return {
-      title,
-      key,
+      form,
+      dialogType,
+      dialogTitle,
+      dialogLabel,
+      dialogPlaceholder,
       maxlength,
-      keyValue,
-      requireName,
-      requireTime,
-      requireLogo,
-      requireUrl,
+      onEdit,
       displayUrl,
       displayLogo,
       displayItem,
@@ -236,7 +193,7 @@ export default {
       userId,
       show_1,
       show_2,
-      show_3,
+      showDialog,
       onClickLeft,
       message,
       userCheckConfirm,

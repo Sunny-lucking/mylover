@@ -2,7 +2,7 @@ var path = require('path');
 import admin from './../router/admin'
 import role from './../router/role'
 import right from './../router/right'
-import banner from './../router/banner'
+import poster from '../router/poster'
 import article from './../router/article'
 import tag from './../router/tag'
 import user from './../router/user'
@@ -74,7 +74,7 @@ require("./passport")(passport);
 app.use('/api/admin',admin)
 app.use('/api/role',role)
 app.use('/api/right',right)
-app.use('/api/banner',banner)
+app.use('/api/poster',poster)
 app.use('/api/article',article)
 app.use('/api/tag',tag)
 app.use('/api/user',user)
