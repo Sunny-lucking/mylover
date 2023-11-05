@@ -8,7 +8,7 @@
         @click-left="onClickLeft"
       />
     </div>
-    <div
+    <!-- <div
       style="
         display: flex;
         justify-content: center;
@@ -23,7 +23,7 @@
         position="center"
         :src="image"
       />
-    </div>
+    </div> -->
     <van-loading vertical v-if="isLoading" class="loading-overlay">
       <template #icon>
         <van-icon name="star-o" size="30" />
@@ -41,19 +41,20 @@
         v-model="fileList"
         :after-read="afterRead"
         upload-text="上传头像"
+        max-count="1"
       />
 
       <van-cell-group inset>
         <br />
         <van-field
-          v-model="username"
+          v-model="form.name"
           name="更改用户名"
           label="🧩用户名"
           placeholder="更改用户名（选填）"
           clearable
         />
         <van-field
-          v-model="desc"
+          v-model="form.desc"
           name="更改用户详情"
           label="📝用户详情"
           type="textarea"
@@ -62,7 +63,7 @@
           clearable
         />
         <van-field
-          v-model="password"
+          v-model="form.password"
           type="password"
           name="更改密码"
           label="💥更改密码"
@@ -103,22 +104,32 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted,getCurrentInstance } from "vue";
 import axios from "axios";
 import png from "@/util/useAdd.gif";
 import { useRouter } from "vue-router";
 // jwt解析插件
 import jwtDecode from "jwt-decode";
-
+import { useUserStore } from '../../store';
 export default {
   setup() {
+    const userStore = useUserStore();
+    console.log(userStore.userInfo);
     const image = [png];
     const show_1 = ref(false);
     const show_2 = ref(false);
     const isLoading = ref(false);
     const router = useRouter();
+    const formData = new FormData();
+    const avatar_url = ref('');
+    const { proxy } = getCurrentInstance();
+
+    const form = ref({
+        name: '',
+        desc: '',
+        password: '',
+    });
     onMounted(() => {
-      fetchLoginToken();
     });
     const token = localStorage.getItem("jwtToken"); // 从localStorage获取JWT令牌
     if (!token) {
@@ -130,28 +141,6 @@ export default {
     };
 
     let userId = "";
-    const fetchLoginToken = () => {
-      axios
-        .post("/api/loginToken?token=" + token)
-        .then((response) => {
-          if (response.data.code == 0) {
-            console.error(response.data.data);
-            router.replace("/login");
-            return;
-          }
-
-          // 获取id
-          const decodedToken = jwtDecode(token);
-          // 从解码后的令牌中获取特定的数据
-          userId = decodedToken.id; // 从令牌中获取用户ID
-          // 在这里处理登录令牌接口的响应
-          // 如果需要执行一些特定的操作，可以在这里添加代码
-        })
-        .catch((error) => {
-          console.error("请求loginToken接口失败", error);
-          router.replace("/login");
-        });
-    };
     const checkConfirm = () => {
       isLoading.value = true; // 显示加载中效果
       onLogout();
@@ -191,9 +180,7 @@ export default {
     };
 
     const onClickLeft = () => router.replace("/Setting");
-    const id = router.currentRoute.value.params.id;
 
-    let strippedId = id.replace(":", "");
 
     const username = ref("");
     const desc = ref("");
@@ -204,56 +191,28 @@ export default {
     const afterRead = (file) => {
       file.status = "uploading";
       file.message = "上传中...";
-
-      const formData = new FormData();
-      formData.append("file", file.file);
-
-      fetch("/api/upload", {
-        method: "POST",
-        headers: headers, // 添加请求头
-        body: formData,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          // 这里假设服务器返回一个包含图片URL的JSON对象
-          imageUrl.value = data.data;
-
-          file.message = "上传成功";
-          file.status = "";
-        })
-        .catch((error) => {
-          console.error("上传失败：", error);
-        });
+      formData.append("avatar", file.file);
+      avatar_url.value = URL.createObjectURL(file.file)
+      fileList.value = [{url: avatar_url.value, isImage: true}]
     };
     const onSubmit = () => {
       // 创建包含参数的请求体
-      const user = {
-        // id不能加value
-        nameId: strippedId,
-        name: username.value,
-        userImage: imageUrl.value,
-        userText: desc.value,
-        password: password.value,
-      };
+      formData.append('name', form.value.name),
+      formData.append('desc', form.value.desc),
+      formData.append('password', form.value.password),
+      formData.append('_id', userStore.userInfo._id)
 
       isLoading.value = true;
       // 发送 POST 请求到指定的 URL
-      fetch("/api/requireUser", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(user),
-      })
+      proxy.$http.post("/api/user/edit", formData)
         .then((response) => {
           console.log(response.data);
           try {
             show_1.value = true;
-            // 等待3秒后执行路由跳转
-            setTimeout(() => {
-              router.replace("/");
-            }, 1000);
+            // // 等待3秒后执行路由跳转
+            // setTimeout(() => {
+            //   router.replace("/");
+            // }, 1000);
           } catch (error) {
             console.error("请求requireUser接口失败", error);
           }
@@ -279,6 +238,7 @@ export default {
       onSubmit,
       fileList,
       afterRead,
+      form
     };
   },
 };

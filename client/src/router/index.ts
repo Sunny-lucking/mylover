@@ -7,7 +7,7 @@ const routes = [
     { path: '/Room', component: () => import('@/views/Room/RoomIndex.vue') },
     { path: '/User', component: () => import('@/views/User/UserIndex.vue'), meta: { title: '🦄欢迎来到专属用户中心',keepAlive: true } },
     
-    { path: '/UserRequire/:id', component: () => import('@/views/Add/UserRequireIndex.vue') },
+    { path: '/UserRequire', component: () => import('@/views/Add/UserRequireIndex.vue') },
     { path: '/TaskAdd/:id', component: () => import('@/views/Add/TaskAddIndex.vue') },
     { path: '/ProduceAdd/:id', component: () => import('@/views/Add/ProduceAddIndex.vue') },
     
