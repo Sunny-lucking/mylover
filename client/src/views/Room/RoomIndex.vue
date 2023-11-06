@@ -83,14 +83,6 @@
         </van-dialog>
         <van-back-top right="83vw" bottom="10vh" />
     </div>
-    <!-- 其他内容 -->
-    <!-- 其他内容 -->
-    <van-tabbar v-model="active" active-color="#F19290">
-        <van-tabbar-item replace to="/" icon="home-o">主页</van-tabbar-item>
-        <van-tabbar-item replace to="/task/1" icon="coupon-o">任务</van-tabbar-item>
-        <van-tabbar-item replace to="/Produce/1" icon="point-gift-o">商品</van-tabbar-item>
-        <van-tabbar-item replace to="/Room/1" icon="cart-o">仓库</van-tabbar-item>
-    </van-tabbar>
 </template>
 
 <script>

@@ -3,7 +3,7 @@ const ComponentsPlugin = require("unplugin-vue-components/webpack");
 
 module.exports = {
   lintOnSave: false,
-  publicPath: "/", // 将打包路径修改为根路径
+  publicPath: "./", // 将打包路径修改为根路径
   
   configureWebpack: {
     resolve: {

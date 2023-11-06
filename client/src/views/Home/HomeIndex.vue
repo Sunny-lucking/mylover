@@ -73,20 +73,6 @@
                 <van-button square text="点赞" type="primary" class="good-button" @click="goodItem()" />
             </template>
         </van-swipe-cell>
-        <!--     //导航栏 -->
-        <!-- <van-tabbar v-model="active" class="bottomTabber"> -->
-        <van-tabbar v-model="active" active-color="#F19290">
-            <van-tabbar-item replace to="/" icon="home-o">主页</van-tabbar-item>
-            <!-- <van-tabbar-item>
-                <span>主页</span>
-                <template #icon="props">
-                    <img :src="props.active ? icon.active : icon.inactive" />
-                </template>
-            </van-tabbar-item> -->
-            <van-tabbar-item replace to="/Task/1" icon="coupon-o">任务</van-tabbar-item>
-            <van-tabbar-item replace to="/Produce/1" icon="point-gift-o">商品</van-tabbar-item>
-            <van-tabbar-item replace to="/Room/1" icon="cart-o">仓库</van-tabbar-item>
-        </van-tabbar>
 
         <!-- 弹出层 -->
         <van-dialog v-model:show="show" title="💖 感谢您的心心 💖" width="308" show-cancel-button>
