@@ -64,11 +64,13 @@ router.get("/list", async (req, res) => {
     ]);
     console.log(tasks);
     if (tasks) {
-      return res.json({
-        tasks: tasks,
-        msg: "获取资料成功",
-        code: 0,
-      });
+      setTimeout(()=> {
+        return res.json({
+          tasks: tasks,
+          msg: "获取资料成功",
+          code: 0,
+        });
+      }, 3000)
     } else {
       return res.json({
         code: -1,

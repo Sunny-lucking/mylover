@@ -1,7 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import 'vant/lib/index.css';
-import http from "./../https"
 import installVantUI from './util/vantUI';
 //转向用的
 import router from './router';
@@ -26,13 +25,18 @@ import { Slider } from 'vant';
 // import { Toast } from 'vant';
 // import 'vant/es/toast/style';
 import { createPinia } from 'pinia';
+import { Toast } from 'vant';
+import http from "./../https"
+
 
 
 
 //滑动单元格
 
-const app = createApp(App);
+export const app = createApp(App);
 const state = createPinia();
+app.use(Toast);
+
 app.use(state)
 app.use(http)
 app.use(AddressEdit);
@@ -79,5 +83,7 @@ app.use(Slider);
 
 
 installVantUI(app)
+
+export const globalC =  app.config.globalProperties
 
 app.mount('#app');

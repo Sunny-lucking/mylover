@@ -81,23 +81,23 @@
                 <br />
             </van-dialog>
         </div>
-       
+
     </div>
 </template>
   
 <script>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import axios from "axios";
-import jwtDecode from "jwt-decode";
 import jpg1 from "@/assets/image/user1.jpg";
 import jpg2 from "@/assets/image/user2.jpg";
 import jpg3 from "@/assets/image/user3.jpg";
 import HomeColor from "@/assets/tabBar/HomeIconColor.jpg";
 import HomeGrey from "@/assets/tabBar/HomeIconGrey.jpg";
+import { useUserStore } from "@/store";
 
 export default {
     setup() {
+        const userStore = useUserStore();
         const icon = {
             active: HomeColor,
             inactive: HomeGrey,
@@ -108,11 +108,8 @@ export default {
         const show_1 = ref(false);
         const active = ref(4);
         const router = useRouter();
-        const token = localStorage.getItem("jwtToken"); // 从localStorage获取JWT令牌
-        if (!token) {
-            router.replace("/login");
-        }
-        const owner = ref(jwtDecode(token))
+        const owner = userStore.userInfo
+
         const copyToClipboard = () => {
             const generateShareLink = () => {
                 return location.href;

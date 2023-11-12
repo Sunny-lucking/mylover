@@ -15,3 +15,19 @@ export const useUserStore = defineStore('User', {
         }
     }
 })
+export const useGlobalStore = defineStore('Global', {
+    state: () => {
+        return {
+            loading: false
+        }
+    },
+    getters: {
+
+    },
+
+    actions: {
+        setLoading(value: any) {
+            this.loading = value
+        }
+    }
+})
